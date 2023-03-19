@@ -15,7 +15,7 @@ const user = new Schema({
   cv : String,
   user_type : {
     type: String,
-    enum : ['student' , 'parent' , 'teacher']
+    enum : ['student' , 'parent' , 'teacher' , 'admin']
   },
  fcm_token : String,
 

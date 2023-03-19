@@ -21,7 +21,7 @@ exports.register= async (req,res)=>{
 
         if (emailExists) return res.status(400).json({
             message: "Email already exists",
-            status:'failed'
+            status:false
         })
   
         //hash passwords
@@ -36,15 +36,21 @@ exports.register= async (req,res)=>{
         console.log(req.files)
 
         if(req.files){
-            if(req.files.image[0]){
-                image= req.files.image[0].path
+            if(req.files.image){
+                if(req.files.image[0]){
+                    image= req.files.image[0].path
+                }
+                
             }
            
         }
 
         if(req.files){
-            if(req.files.cv[0]){
-                cv= req.files.cv[0].path;
+            if(req.files.cv){
+                if(req.files.cv[0]){
+                    cv= req.files.cv[0].path;
+                }
+                
             }
         }
 
@@ -78,6 +84,7 @@ exports.register= async (req,res)=>{
                 )
             }
         }
+
 
         const userRegister = new userModel({
         _id:mongoose.Types.ObjectId(),

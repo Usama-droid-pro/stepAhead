@@ -4,12 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start" : "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Usama-droid-pro/stepAhead.git"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "bcrypt": "^5.1.0",
+  "dependencies":{
+  "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
@@ -21,5 +26,9 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.1",
     "nodemon": "^2.0.21"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/Usama-droid-pro/stepAhead/issues"
+  },
+  "homepage": "https://github.com/Usama-droid-pro/stepAhead#readme"
 }

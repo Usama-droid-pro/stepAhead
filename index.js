@@ -61,6 +61,10 @@ app.use(express.json());
 app.use("/admin" , require("./routes/adminRoute"))
 app.use("/user" , require("./routes//userRoute"));
 app.use("/forgetPassword" , require("./routes/userForgetRoute"))
+app.use("/announcment" , require("./routes/announcmentRoute"))
+app.use("/comment" , require("./routes/commentsRoute"))
+
+
 
 
 
