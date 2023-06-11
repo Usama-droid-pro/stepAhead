@@ -7,7 +7,11 @@ const announcmentSchema = new Schema({
   _id : mongoose.Schema.Types.ObjectId,
   name : String,
   description : String,
-likes : [
+  user_id : {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user'
+  },
+  likes : [
         mongoose.Schema.Types.ObjectId,
   ]
 },

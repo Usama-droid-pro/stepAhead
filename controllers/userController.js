@@ -8,10 +8,11 @@ const fs = require("fs");
 
 
 exports.register= async (req,res)=>{
-
     try{
          const user_type = req.body.user_type;
         const father_name = req.body.father_name;
+        const added_by = req.body.added_by ;
+        const added_by_id = req.body.added_by_id;
 
 
         const { error } = registerSchema.validate(req.body);
@@ -85,22 +86,35 @@ exports.register= async (req,res)=>{
             }
         }
 
+        if(user_type != 'teacher'){
+            if(req.body.experience || req.body.qualification){
+                return(
+                    res.json({
+                        message: "If user_type is not teacher than you cannot add experience and qualification",
+                        status : false
+                    })
+                )
+            }
+        }
+
 
         const userRegister = new userModel({
         _id:mongoose.Types.ObjectId(),
         email:req.body.email,
         password:hashPassword,
         user_name:req.body.user_name,
-        fcmToken:req.body.fcmToken,
+        fcm_token:req.body.fcmToken,
         image:image,
         father_name:father_name,
         contact_no : req.body.contact_no,
         address : req.body.address,
         cv:cv,
-        user_type : user_type
+        user_type : user_type,
+        experience : req.body.experience,
+        qualification : req.body.qualification,
+        added_by : added_by , 
+        added_by_id : added_by_id
         
-        
-
         })
 
         const registeredUser = await userRegister.save();
@@ -137,6 +151,8 @@ exports.register= async (req,res)=>{
 exports.login = async (req,res)=>{
     const { error } = loginSchema.validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
+    const fcmToken = req.body.fcmToken;
+
     
   
     const user = await userModel.findOne({ email: req.body.email });
@@ -155,9 +171,25 @@ exports.login = async (req,res)=>{
 
     const token = jwt.sign({ _id: user._id}, process.env.TOKEN);
 
+    let isfcmUpdated = false;
+    if(validPass){
+        const updateResult = await userModel.findOneAndUpdate({email : req.body.email} , {
+            fcm_token : fcmToken
+        } , {
+            new : true
+        });
+
+        console.log(updateResult)
+
+        if(updateResult){
+            isfcmUpdated = true
+        }
+    }
+
     res.json({
-        message: "Logged in successfully", 
+        message: "Logged in successfully",
         result:user,
+        fcm_updated : isfcmUpdated,
         token: token,
         status:"success",
         
@@ -165,8 +197,6 @@ exports.login = async (req,res)=>{
 
 
 }
-
-
 
 
 exports.getAllUsers = async (req,res)=>{
@@ -269,6 +299,10 @@ exports.updateUser = async (req,res)=>{
         const contact_no = req.body.contact_no;
         const address = req.body.address ;
         const father_name =req.body.father_name;
+        const qualification = req.body.qualification ;
+        const experience= req.body.experience;
+
+
         
         const foundResult = await userModel.findOne({_id : user_id});
 
@@ -296,7 +330,9 @@ exports.updateUser = async (req,res)=>{
                 fcmToken:fcmToken,
                 contact_no :contact_no,
                 address : address ,
-                father_name : father_name
+                father_name : father_name,
+                experience : experience ,
+                qualification : qualification
                 },
             {
                 new:true
@@ -326,8 +362,6 @@ exports.updateUser = async (req,res)=>{
         })
     }
 }
-
-
 
 exports.updatePassword =async (req,res)=>{
     try{
@@ -366,7 +400,6 @@ exports.updatePassword =async (req,res)=>{
     }
 }
 
-
 exports.updateImage = async (req,res)=>{
     try{
         const user_id = req.body.user_id;
@@ -381,11 +414,14 @@ exports.updateImage = async (req,res)=>{
 
         const foundImage = await userModel.findOne({_id:user_id});
         if(foundImage.image){
-            fs.unlinkSync(foundImage.image, (err)=>{
-                if(!err){
-                    console.log("Deleted")
-                }
-            })
+            if(fs.existsSync(foundImage.image)){
+                fs.unlinkSync(foundImage.image, (err)=>{
+                    if(!err){
+                        console.log("Deleted")
+                    }
+                })
+            }
+            
         }
 
         const result = await userModel.findOneAndUpdate({_id:user_id} , {image:req.file.path} , {new:true});
@@ -472,6 +508,179 @@ exports.updateCv = async (req,res)=>{
     }
 }
 
+exports.getAllStudents = async (req,res)=>{
+
+    try{
+        const users = await userModel.find({user_type: "student"});
+        if(users){
+            res.json({
+                message: "All students fetched successfully",
+                result: users,
+                status:"success",
+                statusCode:200
+            })
+        }
+        else{
+            res.json({
+                message: "students could not be fetched",
+                result:result,
+                statusCode:404
+            })
+        }
+    }
+    catch(error){
+        res.json({
+            message: "error occurred while fetching users" ,
+            error:error.message
+        })
+    }
+}
+
+exports.getAllTeachers= async (req,res)=>{
+
+    try{
+        const users = await userModel.find({user_type: "teacher"});
+        if(users){
+            res.json({
+                message: "All teachers fetched successfully",
+                result: users,
+                status:"success",
+                statusCode:200
+            })
+        }
+        else{
+            res.json({
+                message: "teacher could not be fetched",
+                result:result,
+                statusCode:404
+            })
+        }
+    }
+    catch(error){
+        res.json({
+            message: "error occurred while fetching teachers" ,
+            error:error.message
+        })
+    }
+}
+
+exports.imageUpload = async(req,res)=>{
+    try{
+        let image; 
+
+        if(!req.file){
+            return(
+                res.json({
+                    message: "file must be provided",
+                    status : false
+                })
+            )
+        }
+
+        if(req.file){
+            image = req.file.path;
+        }
+
+        if(image){
+            res.json({
+                message : "Image uploaded",
+                status : true,
+                image_url : image
+            })
+        }
+        else{
+            res.json({
+                message: "Could not upload Image",
+                status : false,
+            })
+        }
+    }
+    catch(error){
+        res.json({
+            message: "error occurred" ,
+            error:error.message,
+            status : false
+        })
+    }
+    
+}
+
+exports.teachersByAdminId = async (req,res)=>{
+
+    try{
+        const admin_id = req.query.admin_id;
+        if(!admin_id){
+            return(
+                res.json({
+                    message: "Please Provide admin_id",
+                    status : false
+                })
+            )
+        }
+        const users = await userModel.find({added_by : 'admin' , added_by_id : admin_id , user_type : 'teacher'}).populate('added_by_id');
+        if(users){
+            res.json({
+                message: "All Teachers added by this admin fetched successfully",
+                result: users,
+                status:"success",
+                statusCode:200
+            })
+        }
+        else{
+            res.json({
+                message: "users could not be fetched",
+                result:result,
+                statusCode:404
+            })
+        }
+    }
+    catch(error){
+        res.json({
+            message: "error occurred while fetching users" ,
+            error:error.message
+        })
+    }
+}
+
+exports.studentsByAdminId = async (req,res)=>{
+
+    try{
+        const admin_id = req.query.admin_id;
+        if(!admin_id){
+            return(
+                res.json({
+                    message: "Please Provide admin_id",
+                    status : false
+                })
+            )
+        }
+        const users = await userModel.find({added_by : 'admin' , added_by_id : admin_id , user_type : 'student'}).populate('added_by_id');
+        if(users){
+            res.json({
+                message: "All students added by this admin fetched successfully",
+                result: users,
+                status:"success",
+                statusCode:200
+            })
+        }
+        else{
+            res.json({
+                message: "users could not be fetched",
+                result:result,
+                statusCode:404
+            })
+        }
+    }
+    catch(error){
+        res.json({
+            message: "error occurred while fetching users" ,
+            error:error.message
+        })
+    }
+}
+
+
+
 
 const registerSchema = Joi.object({
   user_name: Joi.string(),
@@ -481,10 +690,15 @@ const registerSchema = Joi.object({
   user_type: Joi.string(),
   contact_no : Joi.string(),
   address : Joi.string(),
-  father_name : Joi.string()
+  father_name : Joi.string(),
+  experience : Joi.string(),
+  qualification : Joi.string(),
+  added_by : Joi.string(),
+  added_by_id : Joi.string()
 });
 
 const loginSchema = Joi.object({
     email: Joi.string().min(6).required().email(),
     password: Joi.string().min(6).required(),
+    fcmToken : Joi.string()
 });

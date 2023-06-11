@@ -1,17 +1,20 @@
 const mongoose = require('mongoose');
 
 const announcmentModel = require("../models/announcmentsModel");
+const userModel = require('../models/userModel')
 
 
 exports.addAnnouncment = async (req,res)=>{
     try{
         const name  = req.body.name;
         const description = req.body.description;
+        const user_id = req.body.user_id;
 
         const newAnnouncment = new announcmentModel({
             _id :mongoose.Types.ObjectId(),
             name : name ,
-            description: description
+            description: description,
+            user_id : user_id
         });
 
         const result = await newAnnouncment.save();
@@ -43,7 +46,6 @@ exports.getLastSevenDaysAnnouncments = async(req,res)=>{
 
     try{
         const current_user_id = req.query.current_user_id;
-        let array=[];
         let newArray=[];
 
 
@@ -65,10 +67,12 @@ exports.getLastSevenDaysAnnouncments = async(req,res)=>{
                 $gte: oneWeekAgo,
                 $lte : currentDate
             }
-        })
+        }).populate('user_id');
 
         let result =  [...found];
         result = JSON.parse(JSON.stringify(result))
+
+
 
         for (let i =0 ; i<result.length ; i++){
             if(result[i].likes.includes(current_user_id)){
@@ -81,6 +85,26 @@ exports.getLastSevenDaysAnnouncments = async(req,res)=>{
         console.log(result)
    
        
+               
+        for (let i = 0; i < result.length; i++) {
+            let element = result[i];
+            let users=[];
+
+        if(element.likes){
+            let newArray = element.likes;
+            for (let j = 0; j < newArray.length; j++) {
+
+                let result = await userModel.findOne({_id : newArray[j]});
+                users.push(result);
+                element.likedBy= users;
+            }
+        }
+        
+            
+        }
+        console.log(result)
+
+        
    
         
 
@@ -115,7 +139,6 @@ exports.getAllAnnouncments = async(req,res)=>{
 
         const current_user_id = req.query.current_user_id;
         let user_liked = false;
-        let array=[];
 
         if(!current_user_id){
             return(
@@ -128,22 +151,43 @@ exports.getAllAnnouncments = async(req,res)=>{
         }
         
         let result = await announcmentModel.find({
-        })
 
+        }).populate('user_id');
         result = JSON.parse(JSON.stringify(result))
 
-        result.forEach(element => {
-            if(element.likes.includes(current_user_id)){
-                element.user_liked = true
-            }
-            else{
-                element.user_liked = false
-            }
-            array.push(element)
 
-        });
+        for (let i =0 ; i<result.length ; i++){
+            if(result[i].likes.includes(current_user_id)){
+                console.log(true);
+                result[i].user_liked= true
+            }else{
+                result[i].user_liked = false
+            }
+        }
+        console.log(result)
+   
+       
+               
+        for (let i = 0; i < result.length; i++) {
+            let element = result[i];
+            let users=[];
 
-        if(array){
+        if(element.likes){
+            let newArray = element.likes;
+            for (let j = 0; j < newArray.length; j++) {
+
+                let result = await userModel.findOne({_id : newArray[j]});
+                users.push(result);
+                element.likedBy= users;
+            }
+        }
+        
+            
+        }
+        console.log(result)
+        
+            
+        if(result){
             res.json({
                 message : "All announcments",
                 status : true,
@@ -284,3 +328,4 @@ exports.disLikeAnnouncment = async(req,res)=>{
         })
     }
 }
+

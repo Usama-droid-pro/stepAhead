@@ -13,10 +13,21 @@ const user = new Schema({
   address : String,
   image : String,
   cv : String,
+  added_by: {
+    type : String,
+    enum : ["admin"]
+  },
+  added_by_id: {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'user'
+  },
   user_type : {
     type: String,
     enum : ['student' , 'parent' , 'teacher' , 'admin']
   },
+  qualification : String,
+  experience : String , 
+  reference: String,
  fcm_token : String,
 
 });

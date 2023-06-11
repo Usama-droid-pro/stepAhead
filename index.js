@@ -14,10 +14,7 @@ const cors = require('cors');
 
 app.use("/adminImages" , express.static("adminImages"))
 app.use("/userImages" , express.static("userImages"))
-
-
-
-
+app.use("/chatImages" , express.static("chatImages"))
 
 
 
@@ -63,11 +60,10 @@ app.use("/user" , require("./routes//userRoute"));
 app.use("/forgetPassword" , require("./routes/userForgetRoute"))
 app.use("/announcment" , require("./routes/announcmentRoute"))
 app.use("/comment" , require("./routes/commentsRoute"))
-
-
-
-
-
+app.use("/class" , require("./routes/classesRoute"))
+app.use("/activity" , require("./routes/activityRoute"))
+app.use("/attendence" , require("./routes/attendenceRoute"))
+app.use("/studentGraph" , require("./routes/studentGraphRoute"))
 
 
 
